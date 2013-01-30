@@ -1,0 +1,20 @@
+body {
+	/*background-color: #f0f0f0;*/
+	margin: 0px;
+	padding: 0;
+	overflow: hidden;
+}
+canvas {
+	/*z-index: 4;*/
+/*position: absolute;*/
+}
+#container {
+		z-index: 5;
+
+	/*background: 0xffff00;*/
+	position: absolute;
+/*	left: 80px;*/
+/*	top: 100px;*/
+	width: 400px;
+	height: 300px;
+}

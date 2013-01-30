@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<title>Voronoi</title>
+
+	<!-- CSS -->
+	<link href="voronoi.css" rel="stylesheet" type="text/css">
+	<!-- <link href="sliderStyle.css" rel="stylesheet" type="text/css"> -->
+	<link rel="stylesheet" href="http://code.jquery.com/ui/1.9.1/themes/base/jquery-ui.css" />
+
+	<!-- INCLUDE -->
+ 	<script src="http://code.jquery.com/jquery-1.8.2.js"></script>
+  	<script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
+   	<script src="js/three/build/three.js"></script>
+   	<script src="js/three/examples/js/controls/TrackballControls.js"></script>
+   	<script src="js/three/examples/js/Detector.js"></script>
+   	<script src="js/rhillVoronoi/voronoi.js"></script>
+
+   	<!-- // <script src="./GUI.js"></script> -->
+   	<script src="./voronoiAp.js"></script>
+   	<script src="./initThree.js"></script>
+</head>
+<body>
+    <div id="container"></div>
+
+<!-- 	<div id="fillet">Fillet</div>
+    <div id="width">Width</div>
+    <div id="length">Height</div>
+    <div id="depth">Depth</div>
+    <div id="divs">Divs</div> -->
+	<script> 
+		threeINIT();
+		animate();
+	</script>
+</body>
+</html>
