@@ -1,6 +1,13 @@
 var container;
 var camera, controls, scene, renderer;
 var grid;
+var mouse3D=new THREE.Vector3();
+var projector, ray;
+var intersected
+var SELECTED
+var plane
+offset = new THREE.Vector3()
+
 // var isCtrlDown=false, isShiftDown=false;
 
 function threeINIT() {
@@ -18,8 +25,12 @@ function threeINIT() {
     document.addEventListener( 'keyup', onDocumentKeyUp, false );
     document.addEventListener( 'mouseup', onDocumentMouseUp, false );
     projector = new THREE.Projector();
+    plane = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.25, transparent: true, wireframe: true } ) );
+    plane.visible = false;
+    scene.add( plane );
     // setUpParticles();
-	buildV();
+	// buildV();
+    doVoronoi()
 
 
 }
@@ -31,17 +42,39 @@ function animate() {
 }
 
 function render() {
-    // ray = projector.pickingRay( mouse3D.clone(), camera );
-    // var intersects = ray.intersectObjects( scene.children );
+
+    // var vector = new THREE.Vector3( mouse3D.x, mouse3D.y, 1 );
+    // projector.unprojectVector( vector, camera );
+    // var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+    // var intersects = raycaster.intersectObjects( scene.children );
+
     // if ( intersects.length > 0 ) {
-    //     intersector = getRealIntersector( intersects );
-    //     if ( intersector ) {
-    //         setVoxelPosition( intersector );
-    //         rollOverMesh.position = voxelPosition;
+    //     //if we have intersected something
+    //     if ( intersected != intersects[ 0 ].object ) {
+    //         //if we have intersected something new
+    //         //update intersected
+    //         intersected = intersects[ 0 ].object;
     //     }
+    // } else {
+    //     // we have not intersected anything
+    //     intersected = null;
     // }
+    // console.log(intersected)
+
+
 	renderer.render( scene, camera );
 }
+// function getRealIntersector( intersects ) {
+//                 console.log("GRI")
+
+//     for( i = 0; i < intersects.length; i++ ) {
+//         intersector = intersects[ i ];
+//         // if ( intersector.object != rollOverMesh ) {
+//             return intersector;
+//         // }
+//     }
+//     return null;
+// }
 
 function setUpCamera () {
     camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 10000 );
@@ -92,6 +125,31 @@ function onWindowResize() {
 
 function onDocumentMouseDown( event ) {
     event.preventDefault();
+//     var intersects = ray.intersectObjects( scene.children );
+//     console.log("intersects",intersects)
+//     if ( intersects.length > 0 ) {//if intersecting something
+//         intersector = getRealIntersector( intersects );//get the intersected object
+// }
+var vector = new THREE.Vector3( mouse3D.x, mouse3D.y, 0.5 );
+projector.unprojectVector( vector, camera );
+
+var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+var intersects = raycaster.intersectObjects( scene.children );
+
+if ( intersects.length > 0 ) {
+
+    controls.enabled = false;
+
+    SELECTED = intersects[ 0 ].object;
+
+    var intersects = raycaster.intersectObject( plane );
+    offset.copy( intersects[ 0 ].point ).sub( plane.position );
+
+    container.style.cursor = 'move';
+
+}
+
 
 }
 
@@ -99,12 +157,48 @@ function onDocumentMouseDown( event ) {
 function onDocumentMouseMove( event ) {
 	// console.log(( event.clientX ),event.clientY )
     event.preventDefault();
+    // mouse3D=new THREE.Vector3();
+    mouse3D.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+    mouse3D.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+    var vector = new THREE.Vector3( mouse3D.x, mouse3D.y, 0.5 );
+    projector.unprojectVector( vector, camera );
+    var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+    if ( SELECTED ) {
+        var intersects = raycaster.intersectObject( plane );
+        SELECTED.position.copy( intersects[ 0 ].point.sub( offset ) );
+        return;
+    }
+
+    var intersects = raycaster.intersectObjects( scene.children );
+    if ( intersects.length > 0 ) {
+        console.log(intersects.length)
+        if ( intersected != intersects[ 0 ].object ) {
+            intersected = intersects[ 0 ].object;
+            plane.position.copy( intersected.position );
+            plane.lookAt( camera.position );
+        }
+        container.style.cursor = 'pointer';
+    } else {
+        if ( intersected ) intersected.material.color.setHex( intersected.currentHex );
+        intersected = null;
+        container.style.cursor = 'auto';
+
+    }
 }
 
 function onDocumentMouseUp( event ) {
+
     event.preventDefault();
-    mouseDown=false;
-}
+
+    controls.enabled = true;
+
+    if ( intersected ) {
+        plane.position.copy( intersected.position );
+        SELECTED = null;
+    }
+
+    container.style.cursor = 'auto';}
 function onDocumentKeyDown( event ) {
 
     switch( event.keyCode ) {

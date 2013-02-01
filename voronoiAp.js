@@ -1,15 +1,30 @@
+var seedGeo=new THREE.Geometry();
+var bbox;
+var vorDig
 
-function buildV () {
+function doVoronoi(){
+  computeVoronoi()
+}
+
+
+
+function computeVoronoi () {
 
 	var voronoi = new Voronoi();
-	var bbox = {xl:-800,xr:800,yt:-800,yb:800};
-	var vertices = [{x:-100, y:-200}, {x:50, y:250}, {x:400, y:100}, {x:123, y:28}, {x:550, y:222} /* , ... */];
+  bbox = {xl:-1400,xr:1400,yt:-1000,yb:1000};
+	// bbox = {xl:-(window.innerWidth/2),xr:(window.innerWidth/2),yt:-(window.innerHeight/2),yb:(window.innerHeight)};
+  // var vertices = [{x:-100, y:-200}, {x:50, y:250}, {x:400, y:100}, {x:123, y:28}, {x:550, y:222} /* , ... */];
+  seedGeo.vertices.push(new THREE.Vector3(100,-200,0))
+  seedGeo.vertices.push(new THREE.Vector3(500,25,0))
+  seedGeo.vertices.push(new THREE.Vector3(-400,200,0))
+  seedGeo.vertices.push(new THREE.Vector3(239,88,0))
+  seedGeo.vertices.push(new THREE.Vector3(550,288,0))
+  seedGeo.vertices.push(new THREE.Vector3(-100,-100,0))
 	// a 'vertex' is an object exhibiting 'x' and 'y' properties. The
 	// Voronoi object will add a unique 'voronoiId' property to all
 	// vertices. The 'voronoiId' can be used as a key to lookup the
-	// associated cell in 'diagram.cells'.
-	var diagram = voronoi.compute(vertices, bbox);
-  // console.log(diagram.cells[0])
+	// associated cell in 'vorDig.cells'.
+	vorDig = voronoi.compute(seedGeo.vertices, bbox);
 
   var polyObj=function(){
     this.site
@@ -58,129 +73,69 @@ function buildV () {
       };
     }
     this.buildClippedPoly = function(points){
-      console.log("buildClippedPoly points in",points.length)
+      // console.log("buildClippedPoly points in",points.length)
       for (var i = 0; i < points.length; i++) {
-        console.log(points[i][0])
+        // console.log(points[i][0])
         this.clippedPolyGeo.vertices.push(new THREE.Vector3(points[i][0],points[i][1],0))
       };
       this.clippedPolyGeo.vertices.push(new THREE.Vector3(points[0][0],points[0][1],0))
-      console.log("buildClippedPoly clip",points.length)
+      // console.log("buildClippedPoly clip",points.length)
 
     }
 
   }
-  var origPolys=new Array();//an array of polyObjs
+  var polyObjs=new Array();//an array of polyObjs
 
-  for (var i = 0; i < diagram.cells.length; i++) {
+  for (var i = 0; i < vorDig.cells.length; i++) {
     var po=new polyObj();
-    origPolys.push(po)
-    origPolys[i].geo=new THREE.Geometry();
-    var thisCell=diagram.cells[i]
+    polyObjs.push(po)
+    polyObjs[i].geo=new THREE.Geometry();
+    var thisCell=vorDig.cells[i]
     for (var j = 0; j < thisCell.halfedges.length; j++) {
       var HEax=thisCell.halfedges[j].edge.va.x
       var HEay=thisCell.halfedges[j].edge.va.y
       var HEbx=thisCell.halfedges[j].edge.vb.x
       var HEby=thisCell.halfedges[j].edge.vb.y
-      origPolys[i].geo.vertices.push(new THREE.Vector3(HEax, HEay, 0))
-      origPolys[i].geo.vertices.push(new THREE.Vector3(HEbx, HEby, 0))
+      polyObjs[i].geo.vertices.push(new THREE.Vector3(HEax, HEay, 0))
+      polyObjs[i].geo.vertices.push(new THREE.Vector3(HEbx, HEby, 0))
     };
-    origPolys[i].geo.mergeVertices();
-    origPolys[i].site=new THREE.Vector3(thisCell.site.x,thisCell.site.y,0);
-    origPolys[i].sortCW()
-    origPolys[i].geo.vertices.push(origPolys[i].geo.vertices[0])
+    polyObjs[i].geo.mergeVertices();
+    polyObjs[i].site=new THREE.Vector3(thisCell.site.x,thisCell.site.y,0);
+    polyObjs[i].sortCW()
+    polyObjs[i].geo.vertices.push(polyObjs[i].geo.vertices[0])
   };
 
-    // origPolys[0].sortCW()
-
-
-  var pLine
-  pLine = new THREE.Line( origPolys[0].geo, 
-          new THREE.LineBasicMaterial( { color: 0xff6600, linewidth: 4 } ) );
-          scene.add(pLine);
-
-
+/////////////////////////
+//////Draws the Voronoi
+/////////////////////////
 	var line;
-	for (var i = 0; i < diagram.edges.length; i++) {
-		var a=diagram.edges[i].va
-		var b=diagram.edges[i].vb
+	for (var i = 0; i < vorDig.edges.length; i++) {
+		var a=vorDig.edges[i].va
+		var b=vorDig.edges[i].vb
 		var lineGeo = new THREE.Geometry()
 		lineGeo.vertices.push(new THREE.Vector3(a.x,a.y,-10))
 		lineGeo.vertices.push(new THREE.Vector3(b.x,b.y,-10))
         line = new THREE.Line( lineGeo, 
         new THREE.LineBasicMaterial( { color: 0x00ff00, linewidth: 4 } ) );
         scene.add(line);
-		// scene.add(line)
-		// console.log("scene",scene)
 	};
 
-	// grid = new THREE.Mesh( new THREE.PlaneGeometry( 100, 100, 100, 100 ), new THREE.MeshBasicMaterial( { color: 0x00ff00, wireframe: true } ) );
-	// // gridLevel=drawer.rectangles[drawer.rectangles.length-1].z+1;
-	// // grid.translateZ(100);
-	// var pos=new THREE.Vector3(200,200,-10)
-	// grid.position=pos
-	// // console.log("pos",grid.position)
+  // var particles = new THREE.Geometry();
+  var pMaterial =
+        new THREE.ParticleBasicMaterial({
+          color: 0x66ff00,
+          size: 30
+        });
+    
+   var particleSystem =
+    new THREE.ParticleSystem(
+      seedGeo,
+      pMaterial);
+    scene.add(particleSystem)
 
-	// grid.name='GRID';
-	// scene.add( grid );
-	// grid.visible=false
-
-	var particles = new THREE.Geometry();
-	var pMaterial =
-	      new THREE.ParticleBasicMaterial({
-	        color: 0x66ff00,
-	        size: 20
-	      });
-	for (var i = 0; i < vertices.length; i++) {
-	      	var pv=new THREE.Vector3(vertices[i].x,vertices[i].y,0)
-	      	particles.vertices.push(pv)
-	      };      
-
-	 var particleSystem =
-	  new THREE.ParticleSystem(
-	    particles,
-	    pMaterial);
-	  scene.add(particleSystem)
-
-// /////////////////////
-// //////TEST CLIPPING///
-// ///////////////////////////
-//   var subjectPolygon = [[-50, -150], [-200, -50], [-350, -150], [-350, -300], [-250, -300], [-200, -250], [-150, -350], [-100, -250], [-100, -200]];
-//   // var subjectPolygon=[[-700,-700],[-700,500],[500,500],[500,-500]]
-//   var subPolyGeo=new THREE.Geometry();
-//   for (var i = 0; i < subjectPolygon.length; i++) {
-//   	subPolyGeo.vertices.push(new THREE.Vector3(subjectPolygon[i][0],subjectPolygon[i][1],100))
-//   };
-//   subPolyGeo.vertices.push(new THREE.Vector3(subjectPolygon[0][0],subjectPolygon[0][1],100))
-//   line = new THREE.Line( subPolyGeo, 
-//   new THREE.LineBasicMaterial( { color: 0xff00ff, linewidth: 4 } ) );//purple
-//   scene.add(line);
-
-//   var clipPolygon = [[-20, -100], [-320, -200], [-300, -300], [-90, -300]];
-//   // var  clipPolygon=[[-900,-900],[-900,100],[400,100],[400,-900]]
-//   var clipPolyGeo=new THREE.Geometry();
-//   for (var i = 0; i < clipPolygon.length; i++) {
-//   	// console.log("ack",subjectPolygon[i][1],subjectPolygon[i][2])
-//   	clipPolyGeo.vertices.push(new THREE.Vector3(clipPolygon[i][0],clipPolygon[i][1],100))
-//   };
-//   clipPolyGeo.vertices.push(new THREE.Vector3(clipPolygon[0][0],clipPolygon[0][1],100))
-//   line = new THREE.Line( clipPolyGeo, 
-//   new THREE.LineBasicMaterial( { color: 0x0000ff, linewidth: 4 } ) );//blue
-//   scene.add(line);
-
-//   // var clippedPolygon = clip(clipPolygon, subjectPolygon);
-//   var clippedPolygon = clip(subjectPolygon, clipPolygon);
-
-//   var clippedPolyGeo=new THREE.Geometry();
-//   for (var i = 0; i < clippedPolygon.length; i++) {
-//   	clippedPolyGeo.vertices.push(new THREE.Vector3(clippedPolygon[i][0],clippedPolygon[i][1],100))
-//   };
-//   clippedPolyGeo.vertices.push(new THREE.Vector3(clippedPolygon[0][0],clippedPolygon[0][1],100))
-//   line = new THREE.Line( clippedPolyGeo, 
-//   new THREE.LineBasicMaterial( { color: 0xff0000, linewidth: 4 } ) );//red
-//   scene.add(line);
 
 /////////////////////
-  /// VORONOI CLIPPING/////////
+/// VORONOI CLIPPING/////////
 //////////////////////
   // var border=[[-700,-700],[700,-700],[700,700],[-700,700]]
   var border=[[-700,-600],[-600,-700],[700,-700],[700,700],[-500,400]]
@@ -190,64 +145,128 @@ function buildV () {
   };
   borderGeo.vertices.push(new THREE.Vector3(border[0][0],border[0][1],0))
 
-  line = new THREE.Line( borderGeo, 
-  new THREE.LineBasicMaterial( { color: 0x00ffff, linewidth: 4 } ) );//blue
-  scene.add(line);
-
-  // var test=[[-700,-700],[-700,500],[500,500],[500,-500]]
-  // var testGeo=new THREE.Geometry()
-  // for (var i = 0; i < test.length; i++) {
-  //   testGeo.vertices.push(new THREE.Vector3(test[i][0],test[i][1],0))
-  // };
-  // testGeo.vertices.push(new THREE.Vector3(test[0][0],test[0][1],0))
-
-  // line = new THREE.Line( testGeo, 
-  // new THREE.LineBasicMaterial( { color: 0x0000ff, linewidth: 4 } ) );//blue
+  // line = new THREE.Line( borderGeo, 
+  // new THREE.LineBasicMaterial( { color: 0x00ffff, linewidth: 4 } ) );//blue
   // scene.add(line);
 
-
-  for (var i = 0; i < origPolys.length; i++) {
-    // var i=2
-    origPolys[i].makeClipArray()
+  for (var i = 0; i < polyObjs.length; i++) {
+    polyObjs[i].makeClipArray()
     ///clip
-    // var clipedPoly=clip(test,border)
-    var clipedPoly=clip(origPolys[i].clipArray,border)
-
-    // console.log("border ",border)
-    // console.log("polyObj ",origPolys[i].clipArray)
-
-    origPolys[i].buildClippedPoly(clipedPoly)
+    var clipedPoly=clip(polyObjs[i].clipArray,border)
+    polyObjs[i].buildClippedPoly(clipedPoly)
     var pLine
-    // console.log(origPolys[i].clippedPolyGeo.vertices)
-    pLine = new THREE.Line( origPolys[i].clippedPolyGeo, 
+    pLine = new THREE.Line( polyObjs[i].clippedPolyGeo, 
             new THREE.LineBasicMaterial( { color: 0xffff00, linewidth: 4 } ) );
     scene.add(pLine);
-
   };
-  // for (var i = 0; i < origPolys.length; i++) {
-  //   origPolys[i].makeClipArray()
-  //   ///clip
-  //   var clipedPoly=clip(origPolys[i].clipArray,border)
-  //   console.log("border ",border)
-  //   console.log("polyObj ",origPolys[i].clipArray)
+////////////////////
+/////Create Verts
+////////////////////
+var Vert = function(){
+  this.v=new THREE.Vector3()
+  this.edgeV=new Array()
 
-  //   origPolys[i].buildClippedPoly(clipedPoly)
+  this.cleanEdgeV = function(){
+    var dupe;
+    for (var i = 0; i < this.edgeV.length; i++) {
+      var ev =this.edgeV[i]
+      if (ev.equals(this.v)){
+      dupe=i
+          this.edgeV.splice(dupe,1)
+          return
 
-  // };
+      }
+    };
+  }
 
-  // var pLine
-  // // console.log(origPolys[i].clippedPolyGeo.vertices)
-  // pLine = new THREE.Line( origPolys[i].clippedPolyGeo, 
-  //         new THREE.LineBasicMaterial( { color: 0xffff00, linewidth: 4 } ) );
-  // scene.add(pLine);
+}
+  var verts=new Array()
+  for (var i = 0; i < polyObjs.length; i++) {
+     var poly = polyObjs[i]
+     for (var j = 0; j < poly.clippedPolyGeo.vertices.length; j++) {
+       var nVerts=poly.clippedPolyGeo.vertices.length
+       // console.log("thisV", roundVector(poly.clippedPolyGeo.vertices[j]) )
 
+       var thisV=roundVector(poly.clippedPolyGeo.vertices[j])
+       var nextV=roundVector(poly.clippedPolyGeo.vertices[(j+1)%nVerts])
+       // console.log("idx",j, nVerts,(j+1)%nVerts, (j+nVerts-1)%nVerts )
+       var prevV=roundVector(poly.clippedPolyGeo.vertices[(j+nVerts-1)%nVerts])
+
+       var vertexPresent=false
+       var nextVPresent=false
+       var prevVPresent=false
+       // console.log("verts len",verts.length)
+
+       if (verts.length>0){
+
+         for (var k = 0; k < verts.length; k++) {//for all the verts
+          // console.log("ack",k)
+           var thisVert=verts[k]
+           if(thisVert.v.equals(thisV)){ //if this vert is the one we are adding
+            vertexPresent=true;
+              for (var l = 0; l < thisVert.edgeV.length; l++) {
+                var thisEdgeV=thisVert.edgeV[l];
+                if(thisEdgeV.equals(nextV)){
+                  nextVPresent=true
+                }
+                if(thisEdgeV.equals(prevV)){
+                  prevVPresent=true
+                }
+              }
+              if(!nextVPresent && !nextV.equals(thisV)){
+                thisVert.edgeV.push(nextV)
+              }
+              if(!prevVPresent && !prevV.equals(thisV)){
+                thisVert.edgeV.push(prevV)
+              }
+            }
+          };
+
+        if(!vertexPresent){
+          var newVert=new Vert()
+          newVert.v=thisV
+          newVert.edgeV.push(nextV)
+          newVert.edgeV.push(prevV)
+          verts.push(newVert)
+         }
+       }else{
+        //else this is the first vertex
+         var newVert=new Vert()
+         // newVert.v=thisV
+         newVert.edgeV.push(nextV)
+         newVert.edgeV.push(prevV)
+         verts.push(newVert)
+       }
+     };
+  };
+
+for (var i = 0; i < verts.length; i++) {
+      verts[i].cleanEdgeV()
+  }
+  console.log(verts)
+
+  function roundVector (v){
+    // console.log("rv pre",v)
+  v.setX( Math.floor((v.x)*10)/10 )
+  v.setY( Math.floor((v.y)*10)/10 )
+  v.setZ( Math.floor((v.z)*10)/10 )
+  // console.log("rv post",v)
+  return v
+
+  }
+        var geometry = new THREE.CubeGeometry( 200, 200, 200 );
+        var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+
+        object.position.x = 0;
+        object.position.y = 0;
+        object.position.z = 0;
+                  scene.add( object );
 
 }
 
 function clip (subjectPolygon, clipPolygon) {
   // http://rosettacode.org/wiki/Sutherland-Hodgman_polygon_clipping#JavaScript
-console.log("inclip sub",subjectPolygon)
-console.log("inclip clip",clipPolygon)
+
     var cp1, cp2, s, e;
     var inside = function (p) {
         return (cp2[0]-cp1[0])*(p[1]-cp1[1]) > (cp2[1]-cp1[1])*(p[0]-cp1[0]);
@@ -271,7 +290,7 @@ console.log("inclip clip",clipPolygon)
             var e = inputList[i];
             if (inside(e)) {
                 if (!inside(s)) {
-                  console.log("       inside")
+                  // console.log("       inside")
                     outputList.push(intersection());
                 }
                 outputList.push(e);
@@ -283,6 +302,6 @@ console.log("inclip clip",clipPolygon)
         }
         cp1 = cp2;
     }
-    console.log("outputlist",outputList)
+    // console.log("outputlist",outputList)
     return outputList
 }
