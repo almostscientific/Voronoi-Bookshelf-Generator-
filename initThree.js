@@ -115,7 +115,7 @@ function setUpLights () {
 }
 function setUpRenderer () {
     renderer = new THREE.WebGLRenderer( { antialias: false } );
-    renderer.setClearColor( 0x222222, 1 );
+    renderer.setClearColor( 0xff2222, 1 );
     renderer.setSize( window.innerWidth, window.innerHeight );
 }
 function onWindowResize() {
@@ -171,7 +171,7 @@ function onDocumentMouseMove( event ) {
         if(SELECTED.name=="seed"){
             // console.log("SELECTED naed seed",SELECTED)
             seeds.updateSeedGeo()
-            // computeVoronoi()
+            computeVoronoi()
         }
         return;
     }

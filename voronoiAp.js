@@ -9,14 +9,20 @@ var seedGeo=new THREE.Geometry()
 // seedGeo.vertices.push(new THREE.Vector3(-100,-100,0))
 var seeds
 var polygonLines;
+var polyObjs
 
 function doVoronoi(){
   seeds=new Seeds();
   seeds.addSeed(new THREE.Vector3(100,-200,0))
   seeds.addSeed(new THREE.Vector3(500,25,0))
+  seeds.addSeed(new THREE.Vector3(-100,-100,0))
+  seeds.addSeed(new THREE.Vector3(-400,200,0))
+  seeds.addSeed(new THREE.Vector3(-300,200,0))
+  seeds.addSeed(new THREE.Vector3(-200,200,0))
 
   computeVoronoi()
-  
+  seeds.renderSeeds()
+
 }
 
 var Seeds = function(){
@@ -55,14 +61,6 @@ function computeVoronoi () {
   // console.log(seeds.seedGeo.vertices.length)
 	var voronoi = new Voronoi();
   bbox = {xl:-1400,xr:1400,yt:-1000,yb:1000};
-	// bbox = {xl:-(window.innerWidth/2),xr:(window.innerWidth/2),yt:-(window.innerHeight/2),yb:(window.innerHeight)};
-  // var vertices = [{x:-100, y:-200}, {x:50, y:250}, {x:400, y:100}, {x:123, y:28}, {x:550, y:222} /* , ... */];
-
-	// a 'vertex' is an object exhibiting 'x' and 'y' properties. The
-	// Voronoi object will add a unique 'voronoiId' property to all
-	// vertices. The 'voronoiId' can be used as a key to lookup the
-	// associated cell in 'vorDig.cells'.
-  // console.log("p",seedGeo[0].position)
   // console.log("seeds.seedGeo.vertices len",seeds.seedGeo.vertices.length)
 	vorDig = voronoi.compute(seeds.seedGeo.vertices, bbox);
   ////////////
@@ -124,7 +122,7 @@ function computeVoronoi () {
     }
 
   }
-  var polyObjs=new Array();//an array of polyObjs
+  polyObjs=new Array();//an array of polyObjs
 // console.log("cellLen",vorDig.cells.length)
 /////////////
 /////BUILD POLY OBJECTS
@@ -151,34 +149,8 @@ function computeVoronoi () {
 /////////////////////////
 //////Draws the Voronoi
 /////////////////////////
-  //The core Voronoi
-	// var line;
-	// for (var i = 0; i < vorDig.edges.length; i++) {
-	// 	var a=vorDig.edges[i].va
-	// 	var b=vorDig.edges[i].vb
-	// 	var lineGeo = new THREE.Geometry()
-	// 	lineGeo.vertices.push(new THREE.Vector3(a.x,a.y,-10))
-	// 	lineGeo.vertices.push(new THREE.Vector3(b.x,b.y,-10))
- //        line = new THREE.Line( lineGeo, 
- //        new THREE.LineBasicMaterial( { color: 0x00ff00, linewidth: 4 } ) );
- //        scene.add(line);
-	// };
 
-  // var particles = new THREE.Geometry();
-  // var pMaterial =
-  //       new THREE.ParticleBasicMaterial({
-  //         color: 0x66ff00,
-  //         size: 30
-  //       });
-    
-  //  var particleSystem =
-  //   new THREE.ParticleSystem(
-  //     seedGeo,
-  //     pMaterial);
-  //   scene.add(particleSystem)
-
-    //DRAWS THE SEEDS
-    seeds.renderSeeds()
+    // seeds.renderSeeds()
 
 
 /////////////////////
@@ -215,6 +187,17 @@ function computeVoronoi () {
   ////////////////////
   /////Create Verts
   ////////////////////
+  buildVerts()
+ 
+}
+
+////////////////
+////////////////
+////////////////
+////////////////
+
+
+function buildVerts(){
   ////////////////////
   /////VERT OBJECT
   ////////////////////
