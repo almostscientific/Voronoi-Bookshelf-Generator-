@@ -65,9 +65,9 @@ function computeVoronoi () {
   // console.log("p",seedGeo[0].position)
   // console.log("seeds.seedGeo.vertices len",seeds.seedGeo.vertices.length)
 	vorDig = voronoi.compute(seeds.seedGeo.vertices, bbox);
-////////////
-/////// POLYOBJECT
-//////////////
+  ////////////
+  /////// POLYOBJECT
+  //////////////
   var polyObj=function(){
     this.site
     this.geo
@@ -165,17 +165,17 @@ function computeVoronoi () {
 	// };
 
   // var particles = new THREE.Geometry();
-  var pMaterial =
-        new THREE.ParticleBasicMaterial({
-          color: 0x66ff00,
-          size: 30
-        });
+  // var pMaterial =
+  //       new THREE.ParticleBasicMaterial({
+  //         color: 0x66ff00,
+  //         size: 30
+  //       });
     
-   var particleSystem =
-    new THREE.ParticleSystem(
-      seedGeo,
-      pMaterial);
-    scene.add(particleSystem)
+  //  var particleSystem =
+  //   new THREE.ParticleSystem(
+  //     seedGeo,
+  //     pMaterial);
+  //   scene.add(particleSystem)
 
     //DRAWS THE SEEDS
     seeds.renderSeeds()

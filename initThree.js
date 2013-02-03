@@ -59,7 +59,11 @@ function render() {
     //     intersected = null;
     // }
     // console.log(intersected)
-
+    // if(SELECTED != null && SELECTED.name=="seed"){
+    //     console.log("SELECTED naed seed",SELECTED)
+    //     seeds.updateSeedGeo()
+    //     computeVoronoi()
+    // }
 
 	renderer.render( scene, camera );
 }
@@ -165,9 +169,9 @@ function onDocumentMouseMove( event ) {
         // SELECTED.z=SELECTED.position.z
         // seedGeo.vericesNeesNeedUpdate
         if(SELECTED.name=="seed"){
-            console.log("SELECTED naed seed",SELECTED)
+            // console.log("SELECTED naed seed",SELECTED)
             seeds.updateSeedGeo()
-            computeVoronoi()
+            // computeVoronoi()
         }
         return;
     }
