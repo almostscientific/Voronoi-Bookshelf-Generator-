@@ -1,38 +1,78 @@
-var seedGeo=new THREE.Geometry();
 var bbox;
 var vorDig
+var seedGeo=new THREE.Geometry()
+// seedGeo.vertices.push(new THREE.Vector3(100,-200,0))
+// seedGeo.vertices.push(new THREE.Vector3(500,25,0))
+// seedGeo.vertices.push(new THREE.Vector3(-400,200,0))
+// seedGeo.vertices.push(new THREE.Vector3(239,88,0))
+// seedGeo.vertices.push(new THREE.Vector3(550,288,0))
+// seedGeo.vertices.push(new THREE.Vector3(-100,-100,0))
+var seeds
+var polygonLines;
 
 function doVoronoi(){
+  seeds=new Seeds();
+  seeds.addSeed(new THREE.Vector3(100,-200,0))
+  seeds.addSeed(new THREE.Vector3(500,25,0))
+
   computeVoronoi()
+  
 }
 
+var Seeds = function(){
+  this.seedGeo=new THREE.Geometry();
+  this.meshes=new Array()
+  this.addSeed=function(v){
+    this.seedGeo.vertices.push(v)
+  }
+  this.renderSeeds = function(){
+    for (var i = 0; i < this.seedGeo.vertices.length; i++) {
+      var geometry = new THREE.SphereGeometry( 20 );
+      var seed = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xffffff } ) );
+      seed.position.x = this.seedGeo.vertices[i].x;
+      seed.position.y = this.seedGeo.vertices[i].y;
+      seed.position.z = this.seedGeo.vertices[i].z;
+      seed.name='seed'
+      scene.add( seed );
+    }
+  }
+  this.updateSeedGeo = function(){
+    this.seedGeo=new THREE.Geometry()
+    console.log("childre len",scene.children.length)
+    for (var i = 0; i < scene.children.length; i++) {
+      var child = scene.children[i]
+      if(child.name=="seed"){
+        console.log("seed num",this.seedGeo.vertices.length)
+        this.seedGeo.vertices.push(new THREE.Vector3( child.position.x,child.position.y,child.position.z))
 
+      }
+    };
+
+  }
+}
 
 function computeVoronoi () {
-
+  // console.log(seeds.seedGeo.vertices.length)
 	var voronoi = new Voronoi();
   bbox = {xl:-1400,xr:1400,yt:-1000,yb:1000};
 	// bbox = {xl:-(window.innerWidth/2),xr:(window.innerWidth/2),yt:-(window.innerHeight/2),yb:(window.innerHeight)};
   // var vertices = [{x:-100, y:-200}, {x:50, y:250}, {x:400, y:100}, {x:123, y:28}, {x:550, y:222} /* , ... */];
-  seedGeo.vertices.push(new THREE.Vector3(100,-200,0))
-  seedGeo.vertices.push(new THREE.Vector3(500,25,0))
-  seedGeo.vertices.push(new THREE.Vector3(-400,200,0))
-  seedGeo.vertices.push(new THREE.Vector3(239,88,0))
-  seedGeo.vertices.push(new THREE.Vector3(550,288,0))
-  seedGeo.vertices.push(new THREE.Vector3(-100,-100,0))
+
 	// a 'vertex' is an object exhibiting 'x' and 'y' properties. The
 	// Voronoi object will add a unique 'voronoiId' property to all
 	// vertices. The 'voronoiId' can be used as a key to lookup the
 	// associated cell in 'vorDig.cells'.
-	vorDig = voronoi.compute(seedGeo.vertices, bbox);
-
+  // console.log("p",seedGeo[0].position)
+  // console.log("seeds.seedGeo.vertices len",seeds.seedGeo.vertices.length)
+	vorDig = voronoi.compute(seeds.seedGeo.vertices, bbox);
+////////////
+/////// POLYOBJECT
+//////////////
   var polyObj=function(){
     this.site
     this.geo
     this.clipArray=new Array();
     this.clippedPolyGeo=new THREE.Geometry();
-
-
     this.sortCW = function(){
       var tmpVerts=new Array()
       for (var i = 0; i < this.geo.vertices.length; i++) {
@@ -85,7 +125,10 @@ function computeVoronoi () {
 
   }
   var polyObjs=new Array();//an array of polyObjs
-
+// console.log("cellLen",vorDig.cells.length)
+/////////////
+/////BUILD POLY OBJECTS
+//////////////
   for (var i = 0; i < vorDig.cells.length; i++) {
     var po=new polyObj();
     polyObjs.push(po)
@@ -108,17 +151,18 @@ function computeVoronoi () {
 /////////////////////////
 //////Draws the Voronoi
 /////////////////////////
-	var line;
-	for (var i = 0; i < vorDig.edges.length; i++) {
-		var a=vorDig.edges[i].va
-		var b=vorDig.edges[i].vb
-		var lineGeo = new THREE.Geometry()
-		lineGeo.vertices.push(new THREE.Vector3(a.x,a.y,-10))
-		lineGeo.vertices.push(new THREE.Vector3(b.x,b.y,-10))
-        line = new THREE.Line( lineGeo, 
-        new THREE.LineBasicMaterial( { color: 0x00ff00, linewidth: 4 } ) );
-        scene.add(line);
-	};
+  //The core Voronoi
+	// var line;
+	// for (var i = 0; i < vorDig.edges.length; i++) {
+	// 	var a=vorDig.edges[i].va
+	// 	var b=vorDig.edges[i].vb
+	// 	var lineGeo = new THREE.Geometry()
+	// 	lineGeo.vertices.push(new THREE.Vector3(a.x,a.y,-10))
+	// 	lineGeo.vertices.push(new THREE.Vector3(b.x,b.y,-10))
+ //        line = new THREE.Line( lineGeo, 
+ //        new THREE.LineBasicMaterial( { color: 0x00ff00, linewidth: 4 } ) );
+ //        scene.add(line);
+	// };
 
   // var particles = new THREE.Geometry();
   var pMaterial =
@@ -132,6 +176,9 @@ function computeVoronoi () {
       seedGeo,
       pMaterial);
     scene.add(particleSystem)
+
+    //DRAWS THE SEEDS
+    seeds.renderSeeds()
 
 
 /////////////////////
@@ -147,8 +194,13 @@ function computeVoronoi () {
 
   // line = new THREE.Line( borderGeo, 
   // new THREE.LineBasicMaterial( { color: 0x00ffff, linewidth: 4 } ) );//blue
-  // scene.add(line);
-
+  // scene.add(line);  
+////////////
+/////////DRAW POLYGON LINES
+/////////////
+  scene.remove(polygonLines)
+  polygonLines=new THREE.Object3D();
+// console.log("polen",polyObjs.length)
   for (var i = 0; i < polyObjs.length; i++) {
     polyObjs[i].makeClipArray()
     ///clip
@@ -157,29 +209,35 @@ function computeVoronoi () {
     var pLine
     pLine = new THREE.Line( polyObjs[i].clippedPolyGeo, 
             new THREE.LineBasicMaterial( { color: 0xffff00, linewidth: 4 } ) );
-    scene.add(pLine);
+    polygonLines.add(pLine);
   };
-////////////////////
-/////Create Verts
-////////////////////
-var Vert = function(){
-  this.v=new THREE.Vector3()
-  this.edgeV=new Array()
+  scene.add(polygonLines)
+  ////////////////////
+  /////Create Verts
+  ////////////////////
+  ////////////////////
+  /////VERT OBJECT
+  ////////////////////
+  var Vert = function(){
+    this.v=new THREE.Vector3()
+    this.edgeV=new Array()
 
-  this.cleanEdgeV = function(){
-    var dupe;
-    for (var i = 0; i < this.edgeV.length; i++) {
-      var ev =this.edgeV[i]
-      if (ev.equals(this.v)){
-      dupe=i
-          this.edgeV.splice(dupe,1)
-          return
+    this.cleanEdgeV = function(){
+      var dupe;
+      for (var i = 0; i < this.edgeV.length; i++) {
+        var ev =this.edgeV[i]
+        if (ev.equals(this.v)){
+        dupe=i
+            this.edgeV.splice(dupe,1)
+            return
 
-      }
-    };
+        }
+      };
+    }
   }
-
-}
+  ////////////////////
+  /////BUILD VERTS
+  ////////////////////
   var verts=new Array()
   for (var i = 0; i < polyObjs.length; i++) {
      var poly = polyObjs[i]
@@ -240,28 +298,17 @@ var Vert = function(){
      };
   };
 
-for (var i = 0; i < verts.length; i++) {
+  for (var i = 0; i < verts.length; i++) {
       verts[i].cleanEdgeV()
   }
-  console.log(verts)
+  // console.log(verts)
 
   function roundVector (v){
-    // console.log("rv pre",v)
-  v.setX( Math.floor((v.x)*10)/10 )
-  v.setY( Math.floor((v.y)*10)/10 )
-  v.setZ( Math.floor((v.z)*10)/10 )
-  // console.log("rv post",v)
-  return v
-
+    v.setX( Math.floor((v.x)*10)/10 )
+    v.setY( Math.floor((v.y)*10)/10 )
+    v.setZ( Math.floor((v.z)*10)/10 )
+    return v
   }
-        var geometry = new THREE.CubeGeometry( 200, 200, 200 );
-        var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
-
-        object.position.x = 0;
-        object.position.y = 0;
-        object.position.z = 0;
-                  scene.add( object );
-
 }
 
 function clip (subjectPolygon, clipPolygon) {

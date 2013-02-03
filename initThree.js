@@ -42,7 +42,6 @@ function animate() {
 }
 
 function render() {
-
     // var vector = new THREE.Vector3( mouse3D.x, mouse3D.y, 1 );
     // projector.unprojectVector( vector, camera );
     // var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
@@ -125,39 +124,33 @@ function onWindowResize() {
 
 function onDocumentMouseDown( event ) {
     event.preventDefault();
-//     var intersects = ray.intersectObjects( scene.children );
-//     console.log("intersects",intersects)
-//     if ( intersects.length > 0 ) {//if intersecting something
-//         intersector = getRealIntersector( intersects );//get the intersected object
-// }
-var vector = new THREE.Vector3( mouse3D.x, mouse3D.y, 0.5 );
-projector.unprojectVector( vector, camera );
 
-var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+    var vector = new THREE.Vector3( mouse3D.x, mouse3D.y, 0.5 );
+    projector.unprojectVector( vector, camera );
 
-var intersects = raycaster.intersectObjects( scene.children );
+    var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
 
-if ( intersects.length > 0 ) {
+    var intersects = raycaster.intersectObjects( scene.children );
 
-    controls.enabled = false;
+    if ( intersects.length > 0 ) {
 
-    SELECTED = intersects[ 0 ].object;
+        controls.enabled = false;
 
-    var intersects = raycaster.intersectObject( plane );
-    offset.copy( intersects[ 0 ].point ).sub( plane.position );
+        SELECTED = intersects[ 0 ].object;
 
-    container.style.cursor = 'move';
+        var intersects = raycaster.intersectObject( plane );
+        offset.copy( intersects[ 0 ].point ).sub( plane.position );
 
-}
+        container.style.cursor = 'move';
+
+    }
 
 
 }
 
 
 function onDocumentMouseMove( event ) {
-	// console.log(( event.clientX ),event.clientY )
     event.preventDefault();
-    // mouse3D=new THREE.Vector3();
     mouse3D.x = ( event.clientX / window.innerWidth ) * 2 - 1;
     mouse3D.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
     var vector = new THREE.Vector3( mouse3D.x, mouse3D.y, 0.5 );
@@ -167,12 +160,21 @@ function onDocumentMouseMove( event ) {
     if ( SELECTED ) {
         var intersects = raycaster.intersectObject( plane );
         SELECTED.position.copy( intersects[ 0 ].point.sub( offset ) );
+        // SELECTED.Geometry.vertex.x=SELECTED.position.x
+        // SELECTED.y=SELECTED.position.y
+        // SELECTED.z=SELECTED.position.z
+        // seedGeo.vericesNeesNeedUpdate
+        if(SELECTED.name=="seed"){
+            console.log("SELECTED naed seed",SELECTED)
+            seeds.updateSeedGeo()
+            computeVoronoi()
+        }
         return;
     }
 
     var intersects = raycaster.intersectObjects( scene.children );
     if ( intersects.length > 0 ) {
-        console.log(intersects.length)
+        // console.log(intersects.length)
         if ( intersected != intersects[ 0 ].object ) {
             intersected = intersects[ 0 ].object;
             plane.position.copy( intersected.position );
