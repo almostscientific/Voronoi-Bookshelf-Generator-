@@ -1,15 +1,10 @@
 var bbox;
 var vorDig
 var seedGeo=new THREE.Geometry()
-// seedGeo.vertices.push(new THREE.Vector3(100,-200,0))
-// seedGeo.vertices.push(new THREE.Vector3(500,25,0))
-// seedGeo.vertices.push(new THREE.Vector3(-400,200,0))
-// seedGeo.vertices.push(new THREE.Vector3(239,88,0))
-// seedGeo.vertices.push(new THREE.Vector3(550,288,0))
-// seedGeo.vertices.push(new THREE.Vector3(-100,-100,0))
 var seeds
-var polygonLines;
+var polygonLines, vertexSpheres;
 var polyObjs
+var verts
 
 function doVoronoi(){
   seeds=new Seeds();
@@ -19,10 +14,8 @@ function doVoronoi(){
   seeds.addSeed(new THREE.Vector3(-400,200,0))
   seeds.addSeed(new THREE.Vector3(-300,200,0))
   seeds.addSeed(new THREE.Vector3(-200,200,0))
-
   computeVoronoi()
   seeds.renderSeeds()
-
 }
 
 var Seeds = function(){
@@ -44,11 +37,11 @@ var Seeds = function(){
   }
   this.updateSeedGeo = function(){
     this.seedGeo=new THREE.Geometry()
-    console.log("childre len",scene.children.length)
+    // console.log("childre len",scene.children.length)
     for (var i = 0; i < scene.children.length; i++) {
       var child = scene.children[i]
       if(child.name=="seed"){
-        console.log("seed num",this.seedGeo.vertices.length)
+        // console.log("seed num",this.seedGeo.vertices.length)
         this.seedGeo.vertices.push(new THREE.Vector3( child.position.x,child.position.y,child.position.z))
 
       }
@@ -149,8 +142,17 @@ function computeVoronoi () {
 /////////////////////////
 //////Draws the Voronoi
 /////////////////////////
-
-    // seeds.renderSeeds()
+  for (var i = 0; i < vorDig.edges.length; i++) {
+   var a=vorDig.edges[i].va
+   var b=vorDig.edges[i].vb
+    var lineGeo = new THREE.Geometry()
+    lineGeo.vertices.push(new THREE.Vector3(a.x,a.y,-10))
+    lineGeo.vertices.push(new THREE.Vector3(b.x,b.y,-10))
+         line = new THREE.Line( lineGeo, 
+         new THREE.LineBasicMaterial( { color: 0x00ff00, linewidth: 4 } ) );
+         // scene.add(line);
+   // console.log("scene",scene)
+  };
 
 
 /////////////////////
@@ -165,7 +167,7 @@ function computeVoronoi () {
   borderGeo.vertices.push(new THREE.Vector3(border[0][0],border[0][1],0))
 
   // line = new THREE.Line( borderGeo, 
-  // new THREE.LineBasicMaterial( { color: 0x00ffff, linewidth: 4 } ) );//blue
+  // new THREE.LineBasicMaterial( { color: 0x00ffff, linewidth: 40 } ) );//blue
   // scene.add(line);  
 ////////////
 /////////DRAW POLYGON LINES
@@ -185,9 +187,24 @@ function computeVoronoi () {
   };
   scene.add(polygonLines)
   ////////////////////
-  /////Create Verts
+  /////BUILD AND RENDER Verts
   ////////////////////
   buildVerts()
+  scene.remove(vertexSpheres)
+  vertexSpheres=new THREE.Object3D();
+
+  for (var i = 0; i < verts.length; i++) {
+    var v=verts[i].v;
+    var geometry = new THREE.SphereGeometry( 15,50,50 );
+    var vSphere = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xff00ff } ) );
+    vSphere.position.x = v.x;
+    vSphere.position.y = v.y;
+    vSphere.position.z = v.z;
+    vSphere.name='vertex'
+    vertexSpheres.add( vSphere );
+  }
+  // scene.add(vertexSpheres)
+
  
 }
 
@@ -217,11 +234,15 @@ function buildVerts(){
         }
       };
     }
+
+    // this.render = function(){
+
+    // }
   }
   ////////////////////
   /////BUILD VERTS
   ////////////////////
-  var verts=new Array()
+  verts=new Array()
   for (var i = 0; i < polyObjs.length; i++) {
      var poly = polyObjs[i]
      for (var j = 0; j < poly.clippedPolyGeo.vertices.length; j++) {
@@ -284,12 +305,11 @@ function buildVerts(){
   for (var i = 0; i < verts.length; i++) {
       verts[i].cleanEdgeV()
   }
-  // console.log(verts)
 
   function roundVector (v){
-    v.setX( Math.floor((v.x)*10)/10 )
-    v.setY( Math.floor((v.y)*10)/10 )
-    v.setZ( Math.floor((v.z)*10)/10 )
+    v.setX( Math.floor((v.x)*10000)/10000 )
+    v.setY( Math.floor((v.y)*10000)/10000 )
+    v.setZ( Math.floor((v.z)*10000)/10000 )
     return v
   }
 }

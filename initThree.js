@@ -7,6 +7,16 @@ var intersected
 var SELECTED
 var plane
 offset = new THREE.Vector3()
+var Vec2D = toxi.geom.Vec2D,
+    Vec3D= toxi.geom.Vec3D,
+    ToxiclibsSupport = toxi.processing.ToxiclibsSupport,
+    Ellipse = toxi.geom.Ellipse,
+    Circle = toxi.geom.Circle,
+    Polygon2D = toxi.geom.Polygon2D,
+    Rect = toxi.geom.Rect,
+    Triangle2D = toxi.geom.Triangle2D,
+    Line2D = toxi.geom.Line2D,
+    TriangleMesh = toxi.geom.mesh.TriangleMesh;
 
 // var isCtrlDown=false, isShiftDown=false;
 
