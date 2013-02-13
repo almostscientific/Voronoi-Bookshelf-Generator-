@@ -36,6 +36,7 @@ function threeINIT() {
     document.addEventListener( 'mouseup', onDocumentMouseUp, false );
     projector = new THREE.Projector();
     plane = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000, 8, 8 ), new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.25, transparent: true, wireframe: true } ) );
+    plane.name="PLANE"
     plane.visible = false;
     scene.add( plane );
     // setUpParticles();
@@ -156,6 +157,22 @@ function onDocumentMouseDown( event ) {
         offset.copy( intersects[ 0 ].point ).sub( plane.position );
 
         container.style.cursor = 'move';
+        console.log(intersects[ 0 ].point)
+        if(SELECTED.name=="PLANE"){
+            // console.log("ADD",vector)
+            // console.log(mouse3D)
+            console.log(seeds.seedGeo.vertices.length)
+            var pointVec=new THREE.Vector3(intersects[ 0 ].point.x,intersects[ 0 ].point.y,0)
+            pointVec=roundVector(pointVec)
+            console.log(pointVec)
+            seeds.addSeed(pointVec)
+            seeds.renderSeeds()
+
+            // seeds.updateSeedGeo()
+            computeVoronoi()
+
+
+        }
 
     }
 
@@ -179,7 +196,6 @@ function onDocumentMouseMove( event ) {
         // SELECTED.z=SELECTED.position.z
         // seedGeo.vericesNeesNeedUpdate
         if(SELECTED.name=="seed"){
-            // console.log("SELECTED naed seed",SELECTED)
             seeds.updateSeedGeo()
             computeVoronoi()
         }

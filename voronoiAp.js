@@ -5,28 +5,56 @@ var seeds
 var polygonLines, vertexSpheres;
 var polyObjs
 var verts
+var border
+var Vec2D = toxi.geom.Vec2D,
+    Vec3D= toxi.geom.Vec3D,
+    ToxiclibsSupport = toxi.processing.ToxiclibsSupport,
+    Ellipse = toxi.geom.Ellipse,
+    Circle = toxi.geom.Circle,
+    Polygon2D = toxi.geom.Polygon2D,
+    Rect = toxi.geom.Rect,
+    Triangle2D = toxi.geom.Triangle2D,
+    Line2D = toxi.geom.Line2D;
+var border;//=new Border()
+
 
 function doVoronoi(){
+  border=new Border()
   seeds=new Seeds();
-  seeds.addSeed(new THREE.Vector3(100,-200,0))
-  seeds.addSeed(new THREE.Vector3(500,25,0))
-  seeds.addSeed(new THREE.Vector3(-100,-100,0))
-  seeds.addSeed(new THREE.Vector3(-400,200,0))
-  seeds.addSeed(new THREE.Vector3(-300,200,0))
-  seeds.addSeed(new THREE.Vector3(-200,200,0))
+  
+  border.add(new THREE.Vector3(-700,-600,0))
+  border.add(new THREE.Vector3(-600,-700,0))
+  border.add(new THREE.Vector3(700,-700,0))
+  border.add(new THREE.Vector3(700,700,0))
+  border.add(new THREE.Vector3(-500,400,0))
+  
+  // seeds.addSeed(new THREE.Vector3(100.0192,-200,0))
+  // seeds.addSeed(new THREE.Vector3(500,25,0))
+  // seeds.addSeed(new THREE.Vector3(-100,-100,0))
+  // seeds.addSeed(new THREE.Vector3(-400,200,0))
+  // seeds.addSeed(new THREE.Vector3(-300,200,0))
+  // seeds.addSeed(new THREE.Vector3(-200,200,0))
+  
   computeVoronoi()
+
+  if(seeds.getSeedsNumber()==0){
+    border.render()
+  }
   seeds.renderSeeds()
 }
 
 var Seeds = function(){
   this.seedGeo=new THREE.Geometry();
   this.meshes=new Array()
+  this.getSeedsNumber = function(){
+    return this.seedGeo.vertices.length;
+  }
   this.addSeed=function(v){
     this.seedGeo.vertices.push(v)
   }
   this.renderSeeds = function(){
     for (var i = 0; i < this.seedGeo.vertices.length; i++) {
-      var geometry = new THREE.SphereGeometry( 20 );
+      var geometry = new THREE.SphereGeometry( 10,50,50 );
       var seed = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: 0xffffff } ) );
       seed.position.x = this.seedGeo.vertices[i].x;
       seed.position.y = this.seedGeo.vertices[i].y;
@@ -46,6 +74,36 @@ var Seeds = function(){
 
       }
     };
+
+  }
+}
+
+var Border = function(){
+  this.borderGeo=new THREE.Geometry();
+  this.borderPoly=new Polygon2D()
+  this.clipArray= new Array()
+  this.add=function(v){
+    this.borderGeo.vertices.push(v)
+    this.borderPoly.add(new Vec3D(v.x,v.y,v.z))
+    // this.update()
+  }
+  this.makeClipArray=function(){
+    this.clipArray=[]
+    for (var i = 0; i < this.borderGeo.vertices.length; i++) {
+      this.clipArray.push([this.borderGeo.vertices[i].x,this.borderGeo.vertices[i].y])
+    }
+  }
+  this.render=function(){
+    var renderGeo=new THREE.Geometry()
+    renderGeo.vertices=[]
+    for (var i = 0; i < this.borderGeo.vertices.length; i++) {
+      renderGeo.vertices.push(this.borderGeo.vertices[i].clone())
+    };
+    renderGeo.vertices.push(this.borderGeo.vertices[0].clone())
+
+    line = new THREE.Line( renderGeo, 
+    new THREE.LineBasicMaterial( { color: 0x00ffff, linewidth: 5 } ) );//blue
+    scene.add(line);
 
   }
 }
@@ -115,11 +173,11 @@ function computeVoronoi () {
     }
 
   }
-  polyObjs=new Array();//an array of polyObjs
 // console.log("cellLen",vorDig.cells.length)
 /////////////
 /////BUILD POLY OBJECTS
 //////////////
+  polyObjs=new Array();//an array of polyObjs
   for (var i = 0; i < vorDig.cells.length; i++) {
     var po=new polyObj();
     polyObjs.push(po)
@@ -140,46 +198,32 @@ function computeVoronoi () {
   };
 
 /////////////////////////
-//////Draws the Voronoi
+//////Draws the  Orginal Voronoi
 /////////////////////////
   for (var i = 0; i < vorDig.edges.length; i++) {
    var a=vorDig.edges[i].va
    var b=vorDig.edges[i].vb
-    var lineGeo = new THREE.Geometry()
-    lineGeo.vertices.push(new THREE.Vector3(a.x,a.y,-10))
-    lineGeo.vertices.push(new THREE.Vector3(b.x,b.y,-10))
-         line = new THREE.Line( lineGeo, 
+   var lineGeo = new THREE.Geometry()
+   lineGeo.vertices.push(new THREE.Vector3(a.x,a.y,-10))
+   lineGeo.vertices.push(new THREE.Vector3(b.x,b.y,-10))
+   line = new THREE.Line( lineGeo, 
          new THREE.LineBasicMaterial( { color: 0x00ff00, linewidth: 4 } ) );
-         // scene.add(line);
-   // console.log("scene",scene)
+   // scene.add(line);
   };
 
 
 /////////////////////
 /// VORONOI CLIPPING/////////
-/// KELLY IS THE BEST!!!!//////
-//////////////////////
-  // var border=[[-700,-700],[700,-700],[700,700],[-700,700]]
-  var border=[[-700,-600],[-600,-700],[700,-700],[700,700],[-500,400]]
-  var borderGeo=new THREE.Geometry()
-  for (var i = 0; i < border.length; i++) {
-    borderGeo.vertices.push(new THREE.Vector3(border[i][0],border[i][1],0))
-  };
-  borderGeo.vertices.push(new THREE.Vector3(border[0][0],border[0][1],0))
-
-  // line = new THREE.Line( borderGeo, 
-  // new THREE.LineBasicMaterial( { color: 0x00ffff, linewidth: 40 } ) );//blue
-  // scene.add(line);  
 ////////////
 /////////DRAW POLYGON LINES
 /////////////
   scene.remove(polygonLines)
   polygonLines=new THREE.Object3D();
-// console.log("polen",polyObjs.length)
   for (var i = 0; i < polyObjs.length; i++) {
     polyObjs[i].makeClipArray()
     ///clip
-    var clipedPoly=clip(polyObjs[i].clipArray,border)
+    border.makeClipArray()
+    var clipedPoly=clip(polyObjs[i].clipArray,border.clipArray)
     polyObjs[i].buildClippedPoly(clipedPoly)
     var pLine
     pLine = new THREE.Line( polyObjs[i].clippedPolyGeo, 
@@ -187,6 +231,7 @@ function computeVoronoi () {
     polygonLines.add(pLine);
   };
   scene.add(polygonLines)
+
   ////////////////////
   /////BUILD AND RENDER Verts
   ////////////////////
@@ -204,7 +249,7 @@ function computeVoronoi () {
     vSphere.name='vertex'
     vertexSpheres.add( vSphere );
   }
-  // scene.add(vertexSpheres)
+  scene.add(vertexSpheres)
 
  
 }
@@ -235,10 +280,6 @@ function buildVerts(){
         }
       };
     }
-
-    // this.render = function(){
-
-    // }
   }
   ////////////////////
   /////BUILD VERTS
@@ -307,12 +348,15 @@ function buildVerts(){
       verts[i].cleanEdgeV()
   }
 
-  function roundVector (v){
-    v.setX( Math.floor((v.x)*10000)/10000 )
-    v.setY( Math.floor((v.y)*10000)/10000 )
-    v.setZ( Math.floor((v.z)*10000)/10000 )
-    return v
-  }
+
+}
+
+function roundVector (v){
+  var precision=1
+  v.setX( Math.floor((v.x)*precision)/precision )
+  v.setY( Math.floor((v.y)*precision)/precision )
+  v.setZ( Math.floor((v.z)*precision)/precision )
+  return v
 }
 
 function clip (subjectPolygon, clipPolygon) {
